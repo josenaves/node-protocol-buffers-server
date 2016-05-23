@@ -22,7 +22,7 @@ app.get('/florianopolis', function (req, res) {
   res.header('Content-Type', 'application/x-protobuf');
   res.header('Content-Length', imgBuffer.length);
   res.send(imgBuffer);
-  console.log('Image is florianopolis.jpg');
+  console.log('GET /florianopolis');
   console.log(++imagesServed + ' images served');
 });
 
@@ -45,7 +45,7 @@ app.get('/base64/florianopolis', function (req, res) {
   res.header('Content-Type', 'application/json');
   res.send(obj);
 
-  console.log('Image is florianopolis.jpg');
+  console.log('GET /base64/florianopolis');
   console.log(++imagesServed + ' images served');
 });
 
