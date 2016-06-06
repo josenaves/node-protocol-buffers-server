@@ -7,6 +7,8 @@ var builder = ProtoBuf.loadProtoFile("./image.proto");
 var express = require('express');
 var app = express();
 
+var exec = require('child_process').execSync;
+
 var imagesServed = 0;
 
 app.get('/random', function (req, res) {
@@ -60,15 +62,41 @@ function randomImage() {
   return encodeImage(images[idx]);
 }
 
-function encodeImage(imageFileName) {	
+function encodeImage(imageFileName) {
   var Image = builder.build('com.josenaves.android.pb.restful.Image');
   var id = uuid.v1();
   var datetime = new Date().toISOString()
-  	.replace(/T/, ' ')      // replace T with a space
-  	.replace(/\..+/, '');
+    .replace(/T/, ' ')      // replace T with a space
+    .replace(/\..+/, '');
 
-  var data = fs.readFileSync(imageFileName);
-  var image = new Image(id, imageFileName, datetime, data);
-  var pb = image.encode();
-  return pb.toArrayBuffer();
+  console.log('imageFileName = ' + imageFileName);
+  var imageFileNameMini = imageFileName.replace(/(\.[\w\d_-]+)$/i, '_mini$1');
+  console.log('imageFileNameMini = ' + imageFileNameMini);
+
+  // remove file_mini.jpg
+  console.log('Removing previously shriked image...');
+  fs.unlink(imageFileNameMini);
+  
+  console.log('Calling JPEGmini...');
+
+  // integration with JPEGmini
+  var ret = exec('jpegmini -f=' + imageFileName, {stdio:[0,1,2]});
+
+  if (ret) {
+    console.error("child processes failed with error code: " + error.code);
+    return null;
+  }
+
+  console.log('Will read imageFileNameMini = ' + imageFileNameMini);
+  var data = fs.readFileSync(imageFileNameMini);
+
+  if (data) {
+    console.log("Encoding image in pb");
+    var image = new Image(id, imageFileName, datetime, data);
+    var pb = image.encode();
+    return pb.toArrayBuffer();
+  }
+
+  console.error('No data in buffer');
+  return null;
 }
