@@ -19,7 +19,15 @@ app.get('/random', function (req, res) {
 });
 
 app.get('/florianopolis', function (req, res) {
-  var buffer = encodeImage('florianopolis.jpg');
+  var name = 'florianopolis.jpg';
+  var imageMini = shrinkImage(name);
+  if (!imageMini) {
+    console.error('Error in JPEGmini integration!');
+    res.status(500).send('Error in JPEGmini integration!');
+    return;
+  }
+
+  var buffer = encodeImage(imageMini);
   var imgBuffer = new Buffer(buffer, 'binary');
   res.header('Content-Type', 'application/x-protobuf');
   res.header('Content-Length', imgBuffer.length);
@@ -34,12 +42,19 @@ app.get('/base64/florianopolis', function (req, res) {
     .replace(/T/, ' ')      // replace T with a space
     .replace(/\..+/, '');
 
-  var data = fs.readFileSync(name);
+  var imageMini = shrinkImage(name);
+  if (!imageMini) {
+    console.error('Error in JPEGmini integration!');
+    res.status(500).send('Error in JPEGmini integration!');
+    return;
+  }
+
+  var data = fs.readFileSync(imageMini);
   var img = new Buffer(data, 'binary').toString('base64');
 
   var obj = {
     'id' : uuid.v1(),
-    'name' : name,
+    'name' : imageMini,
     'datetime' : datetime,
     'image_data' : img
   };
@@ -55,7 +70,15 @@ app.get('/base64/florianopolis', function (req, res) {
 
 
 app.get('/tree', function (req, res) {
-  var buffer = encodeImage('tree.jpg');
+  var name = 'tree.jpg';
+  var imageMini = shrinkImage(name);
+  if (!imageMini) {
+    console.error('Error in JPEGmini integration!');
+    res.status(500).send('Error in JPEGmini integration!');
+    return;
+  }
+
+  var buffer = encodeImage(imageMini);
   var imgBuffer = new Buffer(buffer, 'binary');
   res.header('Content-Type', 'application/x-protobuf');
   res.header('Content-Length', imgBuffer.length);
@@ -70,12 +93,19 @@ app.get('/base64/tree', function (req, res) {
     .replace(/T/, ' ')      // replace T with a space
     .replace(/\..+/, '');
 
-  var data = fs.readFileSync(name);
+  var imageMini = shrinkImage(name);
+  if (!imageMini) {
+    console.error('Error in JPEGmini integration!');
+    res.status(500).send('Error in JPEGmini integration!');
+    return;
+  }
+
+  var data = fs.readFileSync(imageMini);
   var img = new Buffer(data, 'binary').toString('base64');
 
   var obj = {
     'id' : uuid.v1(),
-    'name' : name,
+    'name' : imageMini,
     'datetime' : datetime,
     'image_data' : img
   };
@@ -99,19 +129,13 @@ function randomImage() {
   return encodeImage(images[idx]);
 }
 
-function encodeImage(imageFileName) {
-  var Image = builder.build('com.josenaves.android.pb.restful.Image');
-  var id = uuid.v1();
-  var datetime = new Date().toISOString()
-    .replace(/T/, ' ')      // replace T with a space
-    .replace(/\..+/, '');
-
+function shrinkImage(imageFileName) {
   console.log('imageFileName = ' + imageFileName);
   var imageFileNameMini = imageFileName.replace(/(\.[\w\d_-]+)$/i, '_mini$1');
   console.log('imageFileNameMini = ' + imageFileNameMini);
 
   // remove file_mini.jpg
-  console.log('Removing previously shriked image...');
+  console.log('Removing previously shrinked image...');
   try {
     fs.unlinkSync(imageFileNameMini);  
   } catch (e) {
@@ -124,10 +148,20 @@ function encodeImage(imageFileName) {
   var ret = execSync('jpegmini -f=' + imageFileName, {stdio:[0,1,2]});
   if (ret) {
     console.error("child processes failed with error code: " + error.code);
-    return null;
+    return undefined;
   }
 
-  console.log('Will read imageFileNameMini = ' + imageFileNameMini);
+  return imageFileNameMini;
+}
+
+function encodeImage(imageFileName) {
+  var Image = builder.build('com.josenaves.android.pb.restful.Image');
+  var id = uuid.v1();
+  var datetime = new Date().toISOString()
+    .replace(/T/, ' ')      // replace T with a space
+    .replace(/\..+/, '');
+
+  console.log('Will read shrinked image = ' + imageFileName);
   var data = fs.readFileSync(imageFileNameMini);
 
   if (data) {
