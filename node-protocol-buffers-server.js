@@ -162,7 +162,7 @@ function encodeImage(imageFileName) {
     .replace(/\..+/, '');
 
   console.log('Will read shrinked image = ' + imageFileName);
-  var data = fs.readFileSync(imageFileNameMini);
+  var data = fs.readFileSync(imageFileName);
 
   if (data) {
     console.log("Encoding image in pb");
