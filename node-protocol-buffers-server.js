@@ -7,7 +7,7 @@ var builder = ProtoBuf.loadProtoFile("./image.proto");
 var express = require('express');
 var app = express();
 
-var exec = require('child_process').execSync;
+//var execSync = require('child_process').execSync;
 
 var imagesServed = 0;
 
@@ -75,12 +75,18 @@ function encodeImage(imageFileName) {
 
   // remove file_mini.jpg
   console.log('Removing previously shriked image...');
-  fs.unlink(imageFileNameMini);
+  try {
+    fs.unlinkSync(imageFileNameMini);  
+  } catch (e) {
+    console.error('no ' + imageFileNameMini + ' found...' );
+  }
   
   console.log('Calling JPEGmini...');
 
   // integration with JPEGmini
-  var ret = exec('jpegmini -f=' + imageFileName, {stdio:[0,1,2]});
+  //var ret = execSync('jpegmini -f=' + imageFileName, {stdio:[0,1,2]});
+
+  var ret = require('child_process').execSync('jpegmini -f=' + imageFileName, {stdio:[0,1,2]});
 
   if (ret) {
     console.error("child processes failed with error code: " + error.code);
@@ -100,3 +106,4 @@ function encodeImage(imageFileName) {
   console.error('No data in buffer');
   return null;
 }
+  
